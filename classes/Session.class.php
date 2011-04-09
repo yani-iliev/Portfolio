@@ -44,17 +44,17 @@ class Session {
 	/**
 	 * @var string $lifeTime Session's lifetime
 	 */
-    private $lifeTime;
+	private $lifeTime;
 
 	/**
 	 * @var resource $dbHandle MySQL handle
 	 */
-    private $dbHandle;
+	private $dbHandle;
 
 	/**
 	 * @var Session $objSession Holds instance of Session class
 	 */
-    static private $objSession = null;
+	static private $objSession = null;
 
 	/**
 	 * Acts as a constructor
@@ -74,66 +74,66 @@ class Session {
 	 * variable $_SESSION['running'] to the string "true"
 	 * @param string $sid Session ID
 	 */
-    static public function init($sid = null) {
-        if (self::$objSession != null) {
-            if (isset($_COOKIE[session_name()])) {
-                setcookie(session_name(), '', time()-42000, '/');
-            }
-            session_destroy();
-        }
+	static public function init( $sid = null ) {
+		if( self::$objSession != null ) {
+			if( isset($_COOKIE[session_name()]) ) {
+				setcookie(session_name(), '', time()-42000, '/');
+			}
+			session_destroy();
+		}
 
-        self::$objSession = new session();
-        session_set_save_handler(array(&self::$objSession,"open"),
-                                 array(&self::$objSession,"close"),
-                                 array(&self::$objSession,"read"),
-                                 array(&self::$objSession,"write"),
-                                 array(&self::$objSession,"destroy"),
-                                 array(&self::$objSession,"gc"));
-        session_set_cookie_params(SESSION_EXPIRE);
-        if(isset($sid)){
-            session_id($sid);
-        }
-        session_start();
-        $_SESSION['running'] = "true";
-    }
+		self::$objSession = new session();
+		session_set_save_handler(array(&self::$objSession,"open"),
+								 array(&self::$objSession,"close"),
+								 array(&self::$objSession,"read"),
+								 array(&self::$objSession,"write"),
+								 array(&self::$objSession,"destroy"),
+								 array(&self::$objSession,"gc"));
+		session_set_cookie_params(SESSION_EXPIRE);
+		if( isset($sid) ) {
+			session_id($sid);
+		}
+		session_start();
+		$_SESSION['running'] = "true";
+	}
 	
 	/**
 	 * Calls member function init with the passed
 	 * parameter
 	 * @param string $sid Session ID
 	 */
-    static public function initById($sid){
-        self::init($sid);
-    }
+	static public function initById( $sid ) {
+		self::init($sid);
+	}
 	
 	/**
 	 * Establishes MySQL DB connection, selects database, and
 	 * stores the connection identifier to the
 	 * data member $dbHandle
 	 */
-    public function establishDbConnection(){
-        $link = mysql_connect(DB_SERVER, DB_USER, DB_PASSWORD) or die('Could not connect: ' . mysql_error());
-        if($link === null){
-            die('Could not connect: ' . mysql_error());
-        }
-        mysql_select_db(DB_NAME, $link);
-        $this->setDbHandle($link);
-    }
+	public function establishDbConnection() {
+		$link = mysql_connect( DB_SERVER, DB_USER, DB_PASSWORD ) or die( 'Could not connect: ' . mysql_error() );
+		if( $link === null ) {
+			die('Could not connect: ' . mysql_error());
+		}
+		mysql_select_db( DB_NAME, $link );
+		$this->setDbHandle( $link );
+	}
 
 	/**
 	 * Returns MySQL connection identifier.
 	 * If the identifier is not valid, creates a new  connection
 	 * @return resource MySQL connection identifier
 	 */
-    public function getDbHandle(){
-        if($this->dbHandle === null || get_resource_type($this->dbHandle) != "mysql link"){
-            $this->establishDbConnection();
-        }
-        if(get_resource_type($this->dbHandle) != "mysql link"){
-            $this->getDbHandle();
-        }
-        return $this->dbHandle;
-    }
+	public function getDbHandle() {
+		if( $this->dbHandle === null || get_resource_type( $this->dbHandle ) != "mysql link" ) {
+			$this->establishDbConnection();
+		}
+		if( get_resource_type( $this->dbHandle ) != "mysql link" ) {
+			$this->getDbHandle();
+		}
+		return $this->dbHandle;
+	}
 
 	/**
 	 * Sets data member $dbHandle to the value of the passed
@@ -141,52 +141,50 @@ class Session {
 	 * @param resource $handle MySQL connection identifier
 	 * @return Session
 	 */
-    public function setDbHandle($handle){
-        $this->dbHandle = $handle;
-        return $this;
-    }
+	public function setDbHandle( $handle ) {
+		$this->dbHandle = $handle;
+		return $this;
+	}
 	
 	/**
 	 * This function checks if the session is running
 	 * and if it is not initializes a new session
 	 */
-    static public function check() {
-        session_set_cookie_params(SESSION_EXPIRE);
-        if(empty($_SESSION['running']))
-        {
-            // There is no session or session expired
-            session::init();
-        }
-        // Reset the expiration time upon page load
-        if (isset($_COOKIE[session_name()]))
-        {
-          setcookie(session_name(), $_COOKIE[session_name()], time() + SESSION_EXPIRE, "/");
-        }
-    }
+	static public function check() {
+		session_set_cookie_params( SESSION_EXPIRE );
+		if( empty( $_SESSION['running'] ) ) {
+			// There is no session or session expired
+			session::init();
+		}
+		// Reset the expiration time upon page load
+		if( isset( $_COOKIE[session_name()] ) ) {
+			setcookie( session_name(), $_COOKIE[session_name()], time() + SESSION_EXPIRE, "/" );
+		}
+	}
 
 	/**
 	 * Stores the expiration of the session in the $lifeTime data member
 	 * This function is called when php tries to create a new session
 	 * @return bool true
 	 */
-    public function open($savePath, $sessName) {
-       // get session-lifetime
-       $this->lifeTime = SESSION_EXPIRE;
-       return true;
-    }
+	public function open( $savePath, $sessName ) {
+		// get session-lifetime
+		$this->lifeTime = SESSION_EXPIRE;
+		return true;
+	}
 
 	/**
 	 * Calls member function gc and closes the MySQL connection
 	 * This function is called when php wants to close a session
 	 * @return bool true
 	 */
-    public function close() {
-        $this->gc(SESSION_EXPIRE);
-        if($this->dbHandle){
-            mysql_close($this->dbHandle);
-        }
-        return true;
-    }
+	public function close() {
+		$this->gc( SESSION_EXPIRE );
+		if( $this->dbHandle ) {
+			mysql_close($this->dbHandle);
+		}
+		return true;
+	}
 
 	/**
 	 * Reads Session values from database.
@@ -194,17 +192,18 @@ class Session {
 	 * @param string $sessID Session ID
 	 * @return array|string Session information or an empty string
 	 */
-    public function read($sessID) {
-        $db = $this->getDbHandle();
-        // fetch session-data
-        $res = mysql_query("SELECT session_data AS d FROM ".TABLE_SESSIONS."
-                            WHERE session_id = '".mysql_real_escape_string($sessID,$db)."'
-                            AND session_expires > ".time(),$db);
-        // return data or an empty string at failure
-        if($res && $row = mysql_fetch_assoc($res))
-            return $row['d'];
-        return "";
-    }
+	public function read( $sessID ) {
+		$db = $this->getDbHandle();
+		// fetch session-data
+		$res = mysql_query( "SELECT session_data AS d FROM ".TABLE_SESSIONS."
+							 WHERE session_id = '".mysql_real_escape_string( $sessID, $db )."'
+							 AND session_expires > ".time(), $db );
+		// return data or an empty string at failure
+		if( $res && $row = mysql_fetch_assoc( $res ) ) {
+			return $row['d'];
+		}
+		return "";
+	}
 
 	/**
 	 * Stores session data to the database
@@ -213,51 +212,53 @@ class Session {
 	 * @param string $sessData Session data
 	 * @return bool true on success false on failure
 	 */
-    public function write($sessID,$sessData) {
-        $db = $this->getDbHandle();
-        // new session-expire-time
-        $newExp = time() + $this->lifeTime;
-        
-        // is a session with this id in the database?
-        $res = mysql_query("SELECT * FROM ".TABLE_SESSIONS."
-                            WHERE session_id = '".mysql_real_escape_string($sessID,$db)."'",$db);
-        // if yes,
-        if($res && mysql_num_rows($res)) {
-            // ...update session-data
+	public function write( $sessID, $sessData ) {
+		$db = $this->getDbHandle();
+		// new session-expire-time
+		$newExp = time() + $this->lifeTime;
 
-            //if $newExp = session_expires then this is part of a complex transaction and there is no need to write the same data
-            //Add 10 second buffer for duplicate writes
-            $row = mysql_fetch_assoc($res);
-            if ($row['session_expires']+10 >= $newExp && $row['session_data'] == $sessData) {
-                return true;
-            }
+		// is a session with this id in the database?
+		$res = mysql_query( "SELECT * FROM ".TABLE_SESSIONS."
+							 WHERE session_id = '".mysql_real_escape_string( $sessID, $db )."'", $db );
+		// if yes,
+		if( $res && mysql_num_rows( $res ) ) {
+			// ...update session-data
 
-            mysql_query("UPDATE ".TABLE_SESSIONS."
-                         SET session_expires = '$newExp',
-                         session_data = '$sessData'
-                         WHERE session_id = '$sessID'",$db);
-            // if something happened, return true
-            if(mysql_affected_rows($db))
-                return true;
-        }
-        // if no session-data was found,
-        else {
-            // create a new row
-            mysql_query("INSERT INTO ".TABLE_SESSIONS." (
-                         session_id,
-                         session_expires,
-                         session_data)
-                         VALUES(
-                         '".mysql_real_escape_string($sessID,$db)."',
-                         '".mysql_real_escape_string($newExp,$db)."',
-                         '".mysql_real_escape_string($sessData,$db)."')",$db);
-            // if row was created, return true
-            if(mysql_affected_rows($db))
-                return true;
-        }
-        // an unknown error occured
-        return false;
-    }
+			//if $newExp = session_expires then this is part of a complex transaction and there is no need to write the same data
+			//Add 10 second buffer for duplicate writes
+			$row = mysql_fetch_assoc($res);
+			if ( $row['session_expires']+10 >= $newExp && $row['session_data'] == $sessData ) {
+				return true;
+			}
+
+			mysql_query( "UPDATE ".TABLE_SESSIONS."
+						  SET session_expires = '$newExp',
+						  session_data = '$sessData'
+						  WHERE session_id = '$sessID'", $db );
+			// if something happened, return true
+			if( mysql_affected_rows( $db ) ) {
+				return true;	
+			}
+		}
+		// if no session-data was found,
+		else {
+			// create a new row
+			mysql_query( "INSERT INTO ".TABLE_SESSIONS." (
+						  session_id,
+						  session_expires,
+						  session_data)
+						  VALUES(
+						  '".mysql_real_escape_string( $sessID, $db )."',
+						  '".mysql_real_escape_string( $newExp, $db )."',
+						  '".mysql_real_escape_string( $sessData, $db )."')", $db );
+			// if row was created, return true
+			if( mysql_affected_rows( $db ) ) {
+				return true;
+			}
+		}
+		// an unknown error occured
+		return false;
+	}
 
 	/**
 	 * Deletes a session 
@@ -265,16 +266,17 @@ class Session {
 	 * @param string $sessID Session ID
 	 * @return bool true on success false on failure
 	 */
-    public function destroy($sessID) {
-        $db = $this->getDbHandle();
-        // delete session-data
-        mysql_query("DELETE FROM ".TABLE_SESSIONS." WHERE session_id = '".mysql_real_escape_string($sessID,$db)."'",$db);
-        // if session was deleted, return true,
-        if(mysql_affected_rows($db))
-            return true;
-        // ...else return false
-        return false;
-    }
+	public function destroy( $sessID ) {
+		$db = $this->getDbHandle();
+		// delete session-data
+		mysql_query( "DELETE FROM ".TABLE_SESSIONS." WHERE session_id = '".mysql_real_escape_string( $sessID, $db )."'", $db );
+		// if session was deleted, return true,
+		if( mysql_affected_rows( $db ) ) {
+			return true;
+		}
+		// ...else return false
+		return false;
+	}
 
 	/**
 	 * Garbage collector
@@ -282,11 +284,11 @@ class Session {
 	 * @param string $sessMaxLifeTime Max session lifetime
 	 * @return int number of deleted sessions or -1 on failure
 	 */
-    public function gc($sessMaxLifeTime) {
-        $db = $this->getDbHandle();
-        // delete old sessions
-        mysql_query("DELETE FROM ".TABLE_SESSIONS." WHERE session_expires < ".time(),$db);
-        // return affected rows
-        return mysql_affected_rows($db);
-    }
+	public function gc( $sessMaxLifeTime ) {
+		$db = $this->getDbHandle();
+		// delete old sessions
+		mysql_query( "DELETE FROM ".TABLE_SESSIONS." WHERE session_expires < ".time(), $db );
+		// return affected rows
+		return mysql_affected_rows( $db );
+	}
 }
