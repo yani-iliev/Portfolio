@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<Accounts>
+  <Account id="1">
+    <name>email@gmail.com</name>
+    <server>{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX</server>
+    <username>email@gmail.com</username>
+    <password>dummy</password>
+  </Account>
+</Accounts>
