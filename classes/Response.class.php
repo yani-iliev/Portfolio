@@ -2,7 +2,9 @@
 /**
  * Response Class
  *
- * Stores the php session in the database
+ * Provides response in JSON format
+ * and sets error flag and error messages 
+ * if problems occur
  *
  * @author Yani Iliev <yani.iliev@cspath.com>
  * @package Classes
